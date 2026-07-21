@@ -1,0 +1,36 @@
+name: Update EuroMillions data
+
+on:
+  schedule:
+    # Diariamente as 06:00 UTC. Apanha os sorteios de terca e sexta a noite (CET).
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}   # permite correr a mao no separador Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gerar em.json a partir da fonte
+        run: python3 build_data.py
+
+      - name: Commit se houver alteracoes
+        run: |
+          if [ -n "$(git status --porcelain em.json)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add em.json
+            git commit -m "chore: atualizar dados EuroMilhoes ($(date -u +%Y-%m-%d))"
+            git push
+            echo "em.json atualizado e enviado."
+          else
+            echo "Sem alteracoes."
+          fi
