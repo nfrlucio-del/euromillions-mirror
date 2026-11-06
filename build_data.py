@@ -84,7 +84,9 @@ def main():
         except Exception as e:  # um jogo a falhar nao impede o outro
             print("ERRO %s: %s" % (name, e), file=sys.stderr)
             failed.append(name)
-    if len(failed) == 2:
+    # Qualquer falha marca a corrida como falhada (vermelho no Actions + email), mas o jogo
+    # que correu bem ja foi gravado e o passo de commit corre na mesma (if: always()).
+    if failed:
         sys.exit(1)
 
 

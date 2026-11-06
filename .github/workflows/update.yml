@@ -2,10 +2,14 @@ name: Update EuroMillions data
 
 on:
   schedule:
-    # Diariamente as 06:00 UTC. Apanha os sorteios da noite anterior:
-    # EuroMilhoes (terca e sexta) e EuroDreams (segunda e quinta).
-    - cron: "0 6 * * *"
+    # De 3 em 3 horas. Os sorteios (EM terca/sexta, ED segunda/quinta) sao a noite; uma unica
+    # corrida diaria era atrasada pelo GitHub para ~13h UTC e deixava a app sem o sorteio de
+    # manha. Assim o sorteio entra na mesma noite/madrugada. Sem alteracoes = sem commit.
+    - cron: "23 */3 * * *"
   workflow_dispatch: {}   # permite correr a mao no separador Actions
+  push:                   # corre logo quando o script ou o workflow mudam
+    branches: [main]
+    paths: [build_data.py, .github/workflows/update.yml]
 
 permissions:
   contents: write
@@ -24,6 +28,7 @@ jobs:
         run: python3 build_data.py
 
       - name: Commit se houver alteracoes
+        if: always()   # grava o jogo que correu bem mesmo que o outro tenha falhado
         run: |
           if [ -n "$(git status --porcelain em.json ed.json)" ]; then
             git config user.name  "github-actions[bot]"
